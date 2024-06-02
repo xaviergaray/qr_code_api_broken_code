@@ -37,7 +37,7 @@ RUN pip install --upgrade pip \
 COPY . /myapp
 # Copy the startup script and make it executable
 COPY start.sh /start.sh
-RUN chmod +x /start.sh
+RUN chmod a+x /start.sh
 # Run the application as a non-root user for security
 RUN useradd -m myuser
 USER myuser
@@ -45,4 +45,13 @@ USER myuser
 # Tell Docker about the port we'll run on.
 EXPOSE 8000
 
-CMD ["/start.sh"]
+#CMD ["/start.sh"]
+
+# Adjust permissions for the qr_codes directory
+ENTRYPOINT ["chmod", "777", "/app/qr_codes"]
+
+# Start the FastAPI application for local
+ENTRYPOINT ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+# start for production
+ENTRYPOINT ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-w", "4", "-b", ":8000", "app.main:app"]
